@@ -5,6 +5,7 @@ import pendulum
 from ohmydomains.registrars.account import RegistrarAccount
 from ohmydomains.domain import Domain
 from ohmydomains.contact import ContactList
+from ohmydomains.util import RequestFailed
 
 
 class ZeitAccount(RegistrarAccount):
@@ -13,18 +14,25 @@ class ZeitAccount(RegistrarAccount):
 
 	REGISTRAR = 'zeit'
 	REGISTRAR_NAME = 'ZEIT'
-	API_BASE = 'https://api.zeit.co/'
+	API_BASE = 'https://api.zeit.co'
 	NEEDED_CREDENTIALS = ('token',)
 
-	def _request(self, method, endpoint, data={}):
+	def _request(self, endpoint, method='get', data={}):
 		data = getattr(requests, method)(self.API_BASE + endpoint, headers={
 			'Authorization': 'Bearer ' + self._credentials['token']
 		}, json=data).json()
 
 		if 'error' in data:
-			raise Exception('Request failed: {}'.format(data['error']['message']))
+			raise RequestFailed(data['error'], method, endpoint, data, self)
 
 		return data
+	
+	def test_credentials(self):
+		try:
+			self._try_request('/www/user')
+			return True
+		except:
+			return False
 
 	def iter_domains(self, **criteria):
 		for raw_domain in self._try_request('get', 'v4/domains')['domains']:

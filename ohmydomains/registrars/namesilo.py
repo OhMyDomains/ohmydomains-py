@@ -31,7 +31,7 @@ class NameSiloAccount(RegistrarAccount):
 		# https://www.namesilo.com/api-reference
 		# code=300 means success
 		if response['code'] != '300':
-			raise Exception('Request failed.')
+			raise RequestFailed(response['detail'], option, data, self)
 		return response
 	
 	def _get_contact_from_id(self, id):

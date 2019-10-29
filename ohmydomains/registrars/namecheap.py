@@ -5,6 +5,7 @@ from math import ceil
 from ohmydomains.domain import Domain
 from ohmydomains.contact import Contact, ContactList
 from ohmydomains.registrars.account import RegistrarAccount
+from ohmydomains.util import RequestFailed
 
 
 def get_ip_address():
@@ -73,23 +74,26 @@ class NameCheapAccount(RegistrarAccount):
 		else:
 			self._client_ip = get_ip_address()
 
-	def _request(self, command, data={}):
-		# https://www.namecheap.com/support/api/global-parameters/
-		params = {
+		self._global_params = {
 			'ApiUser': self._credentials['api_user'],
 			'ApiKey': self._credentials['api_key'],
-			'Command': command,
 			'UserName': self._credentials.get('username', self._credentials['api_user']),
 			'ClientIp': self._client_ip
 		}
+
+	def _request(self, command, data={}):
+		# https://www.namecheap.com/support/api/global-parameters/
+		params = { 'Command': command }
+		params.update(self._global_params)
 		params.update(data)
 
 		response = requests.get(self.API_BASE, params=params)
-		if response.status_code != requests.codes.ok:
-			raise Exception('HTTP request failed.')
 		data = xmltodict.parse(response.text)['ApiResponse']
 		if data['@Status'] != 'OK':
-			raise Exception('API request failed: {}.'.format(data['Errors']['Error']['#text']))
+			errors = data['Errors']['Error']
+			if '#text' in errors:
+				errors = [errors]
+			raise RequestFailed(map(lambda i: i['#text'], errors), command, data, self)
 		return data['CommandResponse']
 	
 	def test_credentials(self):

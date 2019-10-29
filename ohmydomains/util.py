@@ -1,5 +1,6 @@
-class TimeoutError(Exception): pass
-class MaxTriesReachedError(Exception): pass
+from requests.exceptions import Timeout as RequestTimeout
+class RequestFailed(Exception): pass
+class MaxTriesReached(Exception): pass
 
 
 class ObjectDict(dict):

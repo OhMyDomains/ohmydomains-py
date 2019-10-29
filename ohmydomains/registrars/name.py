@@ -1,5 +1,6 @@
 import requests
 from ohmydomains.registrars.account import RegistrarAccount
+from ohmydomains.util import RequestFailed
 
 
 class NameAccount(RegistrarAccount):
@@ -28,8 +29,20 @@ class NameAccount(RegistrarAccount):
 		'email': 'email'
 	}
 
+	def test_credentials(self):
+		try:
+			self._try_request('/hello')
+			return True
+		except:
+			return False
+
 	def _request(self, endpoint, method='get', params={}, data={}):
-		return getattr(requests, method)(self.API_BASE + endpoint, params=params, json=data).json()
+		response = getattr(requests, method)(self.API_BASE + endpoint, params=params, json=data)
+		json = response.json()
+		if response.code != 200:
+			raise RequestFailed(json, method, endpoint, params, data, self)
+		return json
+
 
 	def _get_domain(self, name):
 		response = self._try_request('/domains/' + name)

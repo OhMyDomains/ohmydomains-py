@@ -1,3 +1,6 @@
+from ohmydomains.util import RequestTimeout, MaxTriesReached
+
+
 class RegistrarAccount:
 	REGISTRAR = 'registrar'
 	REGISTRAR_NAME = 'Registrar'
@@ -25,13 +28,17 @@ class RegistrarAccount:
 			try:
 				response = self._request(*args, **kwargs)
 				break
-			except TimeoutError:
+			except RequestTimeout:
 				tries += 1
 
 		if tries == max_tries and not response:
-			raise MaxTriesReachedError
+			raise MaxTriesReached(self, tries)
 
 		return response
+	
+	def update_contacts(self, names, contacts): pass
+
+	def update_name_servers(self, names, servers): pass
 	
 	def iter_domains(self, **criteria): pass
 
