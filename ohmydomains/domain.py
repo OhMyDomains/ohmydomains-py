@@ -6,11 +6,16 @@ class Domain(ObjectDict):
 	'''
 
 	FIELDS = (
+		# fields at least they all have
 		'name', 'registrar_name',
 		'creation', 'expiry',
 		'name_servers',
 		'status',
 
+		# maybe have, maybe not; there are essentially three states,
+		# true, false, unknown.
+		# True, False, None.
+		# compare them to exact values, not boolean results.
 		'lock',
 		'auto_renew',
 		'whois_privacy'

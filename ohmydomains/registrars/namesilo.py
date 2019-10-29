@@ -19,9 +19,6 @@ class NameSiloAccount(RegistrarAccount):
 
 	_contact_cache = {}
 
-	def __init__(self, **credentials):
-		self._credentials = credentials
-
 	def _request(self, operation, data={}):
 		params = {
 			'version': 1,

@@ -187,6 +187,7 @@ class NameCheapAccount(RegistrarAccount):
 			params['Page'] = page_id
 			data = self._try_request('namecheap.domains.getList', params)
 			total_pages = ceil(int(data['Paging']['TotalItems']) / int(data['Paging']['PageSize']))
+			page_id += 1
 			raw_domains = data['DomainGetListResult']['Domain']
 			# in case there is exactly one result and it's not parsed as list
 			if '@Name' in raw_domains:

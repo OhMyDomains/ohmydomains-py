@@ -12,7 +12,9 @@ class Contact(ObjectDict):
 		'phone', 'phone_ext', 'email',
 	)
 
-	def __init__(self, **data):
+	def __init__(self, *args, **data):
+		if len(args) > 0 and isinstance(args[0], dict):
+			contacts = args[0]
 		data = { key: value for key, value in data.items() if key in self.FIELDS }
 		super().__init__(data)
 		for key in self.FIELDS:
@@ -28,7 +30,6 @@ class ContactList(ObjectDict):
 	def __init__(self, *args, **contacts):
 		if len(args) > 0 and isinstance(args[0], dict):
 			contacts = args[0]
-
 		for kind in self.KINDS:
 			self.__dict__[kind] = contacts.get(kind, None) or Contact(kind=kind)
 
