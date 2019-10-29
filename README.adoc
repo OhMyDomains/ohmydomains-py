@@ -1,4 +1,4 @@
-= Oh My Domains: An API and CLI to simplify managing domain names for you.
+= [WIP] Oh My Domains: An API and CLI to simplify managing domain names for you.
 
 When your domain names are scattered around registrars,
 maintaining them becomes a pain.
