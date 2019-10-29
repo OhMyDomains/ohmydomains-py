@@ -1,0 +1,51 @@
+= Oh My Domains: An API and CLI to simplify managing domain names for you.
+
+When your domain names are scattered around registrars,
+maintaining them becomes a pain.
+Even remembering how many domain names you have and what they are
+is no easy job.
+
+`Oh My Domains` aims to help you: with one API you can
+retrieve data of any and all domain names you have,
+and update their contact and name server records with ease.
+
+It will support more registrars and functionalities, gradually.
+
+== Install
+
+`$ pip install requests ohmydomains`
+
+Or, use https://github.com/pipxproject/pipx:[pipx] to install only the CLI:
+
+`$ pipx install ohmydomains`
+
+== Usage
+
+=== API
+
+[source,python]
+----
+from ohmydomains import Manager, providers
+
+manager = Manager()
+manager.add_accounts(
+	providers.namecheap({
+		'api_user': NAMECHEAP_API_USER,
+		'api_key': NAMECHEAP_API_KEY,
+		# ...
+	}),
+	providers.namesilo({ 'api_key': NAMESILO_API_KEY })
+)
+
+for domain in manager.iter_domains():
+	print(domain.name, domain.creation, domain.expiry)
+----
+
+=== CLI
+
+[source,bash]
+----
+$ omd account add namecheap YOUR_API_USER YOUR_API_KEY
+Added NameCheap account YOU_API_USER.
+$ omd list --all
+
