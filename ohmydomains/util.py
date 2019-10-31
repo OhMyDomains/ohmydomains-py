@@ -1,4 +1,6 @@
 from requests.exceptions import Timeout as RequestTimeout
+
+
 class RequestFailed(Exception): pass
 class MaxTriesReached(Exception): pass
 

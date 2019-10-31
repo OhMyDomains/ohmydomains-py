@@ -109,10 +109,10 @@ class Manager:
 	def add_accounts(self, *accounts):
 		'''Add accounts.
 
-		Each must be an instance of the *Account* class provided by
-		submodules in `ohmydomains.registrars`,
-		or a dict containing a `registrar` key and corresponding credentials
-		required by that registrar.
+		* `accounts`: Each must be an instance of the *Account* class provided by
+			submodules in `ohmydomains.registrars`,
+			or a dict containing a `registrar` key and corresponding credentials
+			required by that registrar.
 		'''
 
 		# allow passing in an iterator.
@@ -131,6 +131,13 @@ class Manager:
 					raise UnsupportedRegistrarError(account['registrar'])
 				self.accounts.append(registrars[account['registrar']].Account(account['credentials']))
 
+	def delete_accounts(self, *accounts):
+		for account in accounts:
+			if account not in self.accounts:
+				print(account, 'not in', self.accounts)
+				continue
+			self.accounts.remove(account)
+	
 	def add_domains(self, *domains):
 		'''Manually add domain name(s) not belonging to any stored account.
 

@@ -11,7 +11,8 @@ setup(
 		'pendulum',
 		'toml',
 		'click',
-		'tabulate'
+		'tabulate',
+		'xmltodict'
 	],
 
 	entry_points='''

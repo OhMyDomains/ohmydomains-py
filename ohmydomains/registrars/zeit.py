@@ -17,10 +17,10 @@ class ZeitAccount(RegistrarAccount):
 	API_BASE = 'https://api.zeit.co'
 	NEEDED_CREDENTIALS = ('token',)
 
-	def _request(self, endpoint, method='get', data={}):
+	def _request(self, endpoint, method='get', params={}, data={}):
 		data = getattr(requests, method)(self.API_BASE + endpoint, headers={
 			'Authorization': 'Bearer ' + self._credentials['token']
-		}, json=data).json()
+		}, params=params, json=data).json()
 
 		if 'error' in data:
 			raise RequestFailed(data['error'], method, endpoint, data, self)
@@ -35,7 +35,7 @@ class ZeitAccount(RegistrarAccount):
 			return False
 
 	def iter_domains(self, **criteria):
-		for raw_domain in self._try_request('get', 'v4/domains')['domains']:
+		for raw_domain in self._try_request('/v4/domains')['domains']:
 			# https://zeit.co/docs/api/#endpoints/domains
 			# '... null if not bought with ZEIT.'
 			if raw_domain['expiresAt'] == 'null':
