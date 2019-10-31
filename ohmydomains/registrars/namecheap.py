@@ -62,7 +62,7 @@ class NameCheapAccount(RegistrarAccount):
 	}
 
 
-	def __init__(self, client_ip=None, **credentials):
+	def __init__(self, client_ip=None, net_init=True, **credentials):
 		super().__init__(**credentials)
 		# NameCheap requires your IP address to be whitelisted.
 		# Understandable for security's sake.
@@ -71,8 +71,10 @@ class NameCheapAccount(RegistrarAccount):
 		# Good job NameCheap.
 		if client_ip:
 			self._client_ip = self._credentials['client_ip'] = client_ip
+		elif net_init:
+			self._fill_ip_address()
 		else:
-			self._client_ip = get_ip_address()
+			self._client_ip = '2.3.3.3'
 
 		self._global_params = {
 			'ApiUser': self._credentials['api_user'],
@@ -80,7 +82,10 @@ class NameCheapAccount(RegistrarAccount):
 			'UserName': self._credentials.get('username', self._credentials['api_user']),
 			'ClientIp': self._client_ip
 		}
-
+	
+	def _fill_ip_address(self):
+		self._client_ip = get_ip_address()
+	
 	def _request(self, command, data={}):
 		# https://www.namecheap.com/support/api/global-parameters/
 		params = { 'Command': command }

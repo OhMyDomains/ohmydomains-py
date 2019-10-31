@@ -8,7 +8,7 @@ class RegistrarAccount:
 	NEEDED_CREDENTIALS = ()
 	OPTIONAL_CREDENTIALS = ()
 
-	def __init__(self, **credentials):
+	def __init__(self, net_init=True, **credentials):
 		self._credentials = credentials
 
 	def export(self):
