@@ -9,9 +9,7 @@ SUPPORTED_REGISTRARS = (
 	'namecheap',
 	'namesilo',
 	'name',
-	'dynadot',
 	'zeit',
-	'gandi',
 )
 '''Supported registrars.
 Each entry corresponds to a submodule in `ohmydomains.registrars`.'''
