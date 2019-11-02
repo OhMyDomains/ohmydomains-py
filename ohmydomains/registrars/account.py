@@ -42,7 +42,7 @@ class RegistrarAccount:
 			try:
 				response = self._request(*args, **kwargs)
 				break
-			except RequestTimeout:
+			except:
 				tries += 1
 		if tries == max_tries and not response:
 			raise MaxTriesReached(self, tries)

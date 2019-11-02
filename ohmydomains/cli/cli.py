@@ -6,8 +6,21 @@ import appdirs
 from ohmydomains.util import CONFIG_BASE_PATH, CONFIG_PATH, CACHE_PATH
 from ohmydomains.manager import Manager
 from ohmydomains.domain import Domain
+from ohmydomains.registrars.account import RegistrarAccount
 from ohmydomains.registrars import registrars
 from .registrars import registrar_cli_modifiers
+
+# monkey patch RegistrarAccount._try_request to exit on network failure.
+def _exit_on_failure_try_request(self, *args, **kwargs):
+	try:
+		return self._do_try_request(*args, **kwargs)
+	except:
+		click.echo('')
+		click.echo('Network requests unsuccessful. Please try again later.')
+		import sys
+		sys.exit()
+RegistrarAccount._do_try_request = RegistrarAccount._try_request
+RegistrarAccount._try_request = _exit_on_failure_try_request
 
 
 def load_config():
@@ -64,19 +77,39 @@ def domains(): pass
 DEFAULT_COLUMNS = ('name', 'account', 'creation', 'expiry', 'auto_renew')
 @cli.command('list')
 @click.option('-w', '--columns',
-	help='''Comma separated, specify which columns to show.
+	help='''Comma separated list of columns to show.
 	Available: {}.
 	Default is "{}"'''.format(', '.join(Domain.FIELDS), ','.join(DEFAULT_COLUMNS)))
-@click.option('-r', '--registrars')
-@click.option('-a', '--accounts')
-@click.option('-e', '--expiring', is_flag=True, help='Equals to -d 30.')
-@click.option('-d', '--due-in', help='List only domain names expiring in this many days.')
-@click.option('-E', '--expiring-after', help='''List only domain names expiring after this many days.''')
-@click.option('-c', '--created-before')
-@click.option('-C', '--created-after')
+@click.option('-r', '--registrars', help='Comma separated list of registrars.')
+@click.option('-a', '--accounts', help='Comma separated list of (part of) account identifiers.')
+@click.option('-t', '--account-tags', help='Comma separated list of (part of) account tags.')
+@click.option('-d', '--expiring-in-30-days', is_flag=True,
+	help='List only domain name expiring in 30 days. Equals to -D 30.')
+@click.option('-D', '--expiry-in', help='List only domain names expiring in this many days.')
+@click.option('-e', '--expiry-before', help='List only domain names expiring after this date.')
+@click.option('-E', '--expiry-after', help='List only domain names expiring after this date.')
+@click.option('-c', '--creation-before', help='List only domain names created before this date.')
+@click.option('-C', '--creation-after', help='List only domain names created after this date.')
+@click.option('-s', '--sort-by', default='expiry',
+	help='Sort result by specified column. Default is by expiry.')
+@click.option('-o', '--order', type=click.Choice(['desc', 'asc']), default='asc',
+	help='Order of result. Default is ascending (thus earliest expiry first).')
 @click.argument('criteria', nargs=-1)
-def list_domains(columns, criteria):
-	'''List or search domain names in tracked accounts and manually tracked ones.'''
+def list_domains(columns, registrars, accounts, account_tags, expiring_in_30_days, 
+	sort_by, order,
+	**criteria):
+	'''List or search domain names in tracked accounts and manually tracked ones.
+
+	All date values are in the form of YYYY-MM-DD.
+	'''
+
+	from . import list_domains_output as output
+
+	registrars = registrars and registrars.split(',') or []
+	account_criteria = accounts and accounts.split(',') or []
+	account_tags = account_tags and account_tags.split(',') or []
+	load_manager(manager)
+	accounts = manager.get_accounts(registrars=registrars, criteria=account_criteria, tags=account_tags)
 
 	if columns:
 		columns = columns.split(',')
@@ -84,19 +117,18 @@ def list_domains(columns, criteria):
 		columns = DEFAULT_COLUMNS
 	if 'name' not in columns:
 		columns = ['name'] + columns
+	
+	if expiring_in_30_days:
+		criteria['expiry_in'] = 30
 
-	from . import list_domains_output as output
-	load_manager(manager)
 	domains = []
-	click.echo('Retrieving data for domain #1', nl=False)
-	for account in manager.accounts:
-		#if account.REGISTRAR == 'namecheap':
-		#	continue
-		for domain in account.iter_domains():
-			click.echo('\b' * len(str(len(domains))), nl=False)
-			domains.append(domain)
-			click.echo(len(domains), nl=False)
-	click.echo('\nDone. {} domain name{} in total.'.format(len(domains), len(domain) > 1 and 's' or ''))
+	click.echo('Retrieving data for domain # ', nl=False)
+	for domain in manager.iter_domains(accounts=accounts, **criteria):
+		click.echo('\b' * len(str(len(domains))), nl=False)
+		domains.append(domain)
+		click.echo(len(domains), nl=False)
+	click.echo('\nDone. {} domain name{} in total.'.format(len(domains), len(domains) > 1 and 's' or ''))
+	domains = sorted(domains, key=lambda domain: domain[sort_by], reverse=order == 'desc')
 	click.echo(tabulate([[getattr(output, k)(domain) for k in columns] for domain in domains], headers=columns))
 
 

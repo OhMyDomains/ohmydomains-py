@@ -60,18 +60,18 @@ class Manager:
 			if isinstance(criteria.get(key, None), str):
 				criteria[key] = pendulum.parse(criteria[key])
 
-		if 'expiry_in' in criteria:
+		if criteria.get('expiry_in', None):
 			criteria['expiry_before'] = pendulum.now().add(days=int(criteria['expiry_in']))
 
 		for account in accounts:
 			for domain in account.iter_domains(**criteria):
-				if 'expiry_before' in criteria and domain.expiry > criteria['expiry_before']:
+				if criteria.get('expiry_before', None) and domain.expiry > criteria['expiry_before']:
 					continue
-				if 'expiry_after' in criteria and domain.expiry < criteria['expiry_after']:
+				if criteria.get('expiry_after', None) and domain.expiry < criteria['expiry_after']:
 					continue
-				if 'creation_before' in criteria and domain.creation > criteria['creation_before']:
+				if criteria.get('creation_before', None) and domain.creation > criteria['creation_before']:
 					continue
-				if 'creation_after' in criteria and domain.creation < criteria['creation_after']:
+				if criteria.get('creation_after', None) and domain.creation < criteria['creation_after']:
 					continue
 
 				yield domain
@@ -98,7 +98,7 @@ class Manager:
 		** `order`: `asc`ending or `desc`ending, `desc` by default.
 
 		Criteria listed above which are dates should be `datetime.datetime`-like objects,
-		or strings in the form of `YYYY/MM/DD`.
+		or strings in the form of `YYYY-MM-DD`.
 		Internally we use `pendulum` to handle them.
 		'''
 

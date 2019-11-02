@@ -32,6 +32,8 @@ class Domain(ObjectDict):
 				self[key] = None
 		self.contacts, self.account = contacts, account
 
+		self.tld = self.name[self.name.index('.'):]
+
 	def update_contacts(self, contacts=None):
 		'''Try updating contacts of this domain name to registrar.
 		'''
