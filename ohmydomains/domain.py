@@ -6,6 +6,8 @@ class Domain(ObjectDict):
 	'''
 
 	FIELDS = (
+		# internal implementations
+		'account', 'contacts',
 		# fields at least they all have
 		'name', 'registrar_name',
 		'creation', 'expiry',

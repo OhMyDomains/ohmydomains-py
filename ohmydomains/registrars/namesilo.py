@@ -19,6 +19,12 @@ class NameSiloAccount(RegistrarAccount):
 
 	_contact_cache = {}
 
+	@property
+	def identifier(self):
+		# there's currently no way to get an identifier, username or email,
+		# through the API, so we just use part of the key.
+		return self._credentials['api_key'][:6]
+
 	def _request(self, operation, data={}):
 		params = {
 			'version': 1,
@@ -27,7 +33,7 @@ class NameSiloAccount(RegistrarAccount):
 		}
 		params.update(data)
 
-		response = xmltodict.parse(requests.get(self.API_BASE + operation, params).text)['namesilo']['reply']
+		response = xmltodict.parse(requests.get(self._api_base + operation, params).text)['namesilo']['reply']
 		# https://www.namesilo.com/api-reference
 		# code=300 means success
 		if response['code'] != '300':

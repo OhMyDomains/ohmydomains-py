@@ -17,6 +17,10 @@ class ZeitAccount(RegistrarAccount):
 	API_BASE = 'https://api.zeit.co'
 	NEEDED_CREDENTIALS = ('token',)
 
+	@property
+	def identifier(self):
+		return self._credentials['email']
+
 	def _request(self, endpoint, method='get', params={}, data={}):
 		data = getattr(requests, method)(self.API_BASE + endpoint, headers={
 			'Authorization': 'Bearer ' + self._credentials['token']

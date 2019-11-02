@@ -34,6 +34,7 @@ class NameCheapAccount(RegistrarAccount):
 	REGISTRAR = 'namecheap'
 	REGISTRAR_NAME = 'NameCheap'
 	API_BASE = 'https://api.namecheap.com/xml.response'
+	API_BASE_TESTING = 'https://api.sandbox.namecheap.com/xml.response'
 	NEEDED_CREDENTIALS = ('api_user', 'api_key')
 	OPTIONAL_CREDENTIALS = ('username', 'client_ip')
 
@@ -82,6 +83,10 @@ class NameCheapAccount(RegistrarAccount):
 			'UserName': self._credentials.get('username', self._credentials['api_user']),
 			'ClientIp': self._client_ip
 		}
+
+	@property
+	def identifier(self):
+		return self._global_params['UserName']
 	
 	def _fill_ip_address(self):
 		self._client_ip = get_ip_address()
@@ -92,7 +97,7 @@ class NameCheapAccount(RegistrarAccount):
 		params.update(self._global_params)
 		params.update(data)
 
-		response = requests.get(self.API_BASE, params=params)
+		response = requests.get(self._api_base, params=params)
 		data = xmltodict.parse(response.text)['ApiResponse']
 		if data['@Status'] != 'OK':
 			errors = data['Errors']['Error']

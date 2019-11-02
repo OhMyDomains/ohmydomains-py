@@ -4,18 +4,32 @@ from ohmydomains.util import RequestTimeout, MaxTriesReached
 class RegistrarAccount:
 	REGISTRAR = 'registrar'
 	REGISTRAR_NAME = 'Registrar'
+	API_BASE = ''
+	API_BASE_TESTING = ''
 	
 	NEEDED_CREDENTIALS = ()
 	OPTIONAL_CREDENTIALS = ()
 
-	def __init__(self, net_init=True, **credentials):
+	def __init__(self, testing=False, net_init=True, tags=[], **credentials):
 		self._credentials = credentials
+		self.is_testing_account = testing
+		self.tags = tags
+		self._api_base = testing and self.API_BASE_TESTING or self.API_BASE
 
 	def export(self):
 		return {
 			'registrar': self.REGISTRAR,
-			'credentials': self._credentials
+			'credentials': self._credentials,
+			'testing': self.is_testing_account,
+			'tags': self.tags
 		}
+	
+	@property
+	def identifier(self): pass
+
+	@property
+	def unique_identifier(self):
+		return '{}:{}'.format(self.REGISTRAR_NAME, self.identifier)
 	
 	def test_credentials(self): return True
 	
@@ -30,7 +44,6 @@ class RegistrarAccount:
 				break
 			except RequestTimeout:
 				tries += 1
-
 		if tries == max_tries and not response:
 			raise MaxTriesReached(self, tries)
 

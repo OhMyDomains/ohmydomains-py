@@ -1,10 +1,16 @@
 import requests
+import pendulum
+from ohmydomains.domain import Domain
+from ohmydomains.contact import Contact, ContactList
 from ohmydomains.registrars.account import RegistrarAccount
 from ohmydomains.util import RequestFailed
 
 
 class NameAccount(RegistrarAccount):
+	REGISTRAR = 'name'
+	REGISTRAR_NAME = 'Name'
 	API_BASE = 'https://api.name.com/v4'
+	API_BASE_TESTING = 'https://api.dev.name.com/v4'
 	NEEDED_CREDENTIALS = ('username', 'token')
 
 	CONTACT_KIND_MAP = {
@@ -29,6 +35,14 @@ class NameAccount(RegistrarAccount):
 		'email': 'email'
 	}
 
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self._auth = (self._credentials['username'], self._credentials['token'])
+	
+	@property
+	def identifier(self):
+		return self._credentials['username']
+
 	def test_credentials(self):
 		try:
 			self._try_request('/hello')
@@ -36,10 +50,13 @@ class NameAccount(RegistrarAccount):
 		except:
 			return False
 
-	def _request(self, endpoint, method='get', params={}, data={}):
-		response = getattr(requests, method)(self.API_BASE + endpoint, params=params, json=data)
+	def _request(self, endpoint, method='get', params=None, data=None):
+		response = getattr(requests, method)(self._api_base + endpoint,
+			auth=self._auth,
+			params=params,
+			json=data)
 		json = response.json()
-		if response.code != 200:
+		if response.status_code != 200:
 			raise RequestFailed(json, method, endpoint, params, data, self)
 		return json
 
@@ -50,19 +67,19 @@ class NameAccount(RegistrarAccount):
 		return Domain(
 			contacts=ContactList({
 				kind: Contact({
-					attr: raw_contact[attr_key] for attr, attr_key in self.CONTACT_ATTR_MAP.items()
+					attr: response['contacts'][kind_key].get(attr_key, None) for attr, attr_key in self.CONTACT_ATTR_MAP.items()
 				}) for kind, kind_key in self.CONTACT_KIND_MAP.items()
 			}),
 			account=self,
 
 			name=name,
-			creation=response['createDate'],
-			expiry=response['expireDate'],
+			creation=pendulum.parse(response['createDate']),
+			expiry=pendulum.parse(response['expireDate']),
 			registrar_name=self.REGISTRAR_NAME,
 
 			lock=response['locked'],
 			auto_renew=response['autorenewEnabled'],
-			whois_privacy=response['privacyEnabled'],
+			whois_privacy=response.get('privacyEnabled', False),
 			name_servers=response['nameservers'])
 	
 	def update_contacts(self, names, contacts):
@@ -98,7 +115,8 @@ class NameAccount(RegistrarAccount):
 
 		while page_id < total_pages:
 			response = self._try_request('/domains', params={ 'page': page_id, 'perPage': 1000 })
-			total_pages = response['lastPage']
+			if 'lastPage' in response:
+				total_pages = response['lastPage']
 			page_id += 1
 
 			for raw in response['domains']:

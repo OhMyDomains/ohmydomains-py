@@ -12,11 +12,12 @@ class Manager:
 	def __init__(self, accounts=[], raw_domains=[]):
 		self.accounts, self.raw_domains = accounts, raw_domains
 
-	def get_accounts(self, registrars=[], criteria=[]):
+	def get_accounts(self, registrars=[], criteria=[], tags=[]):
 		'''Get all or search accounts.
 
 		* `registrars`: optional, names defined in `ohmydomains.registrars.SUPPORTED_REGISTRARS`.
 		* `criteria`: optional, keywords to search through account credentials.
+		* `tags`: optional.
 		'''
 
 		if not registrars and not criteria:
@@ -28,17 +29,18 @@ class Manager:
 			accounts = self.accounts.copy()
 
 		if criteria:
-			filtered = []
-			for account in accounts:
-				meets_criteria = True
-				credentials_joint = ','.join(account._credentials.values())
+			for account in accounts[:]:
 				for criterion in criteria:
-					if criterion not in credentials_joint:
-						meets_criteria = False
+					if criterion not in account.identifier:
+						accounts.remove(account)
 						break
-				if meets_criteria:
-					filtered.append(account)
-			return filtered
+
+		if tags:
+			for account in accounts[:]:
+				for tag in tags:
+					if tag not in account.tags:
+						accounts.remove(account)
+						break
 
 		return accounts
 
