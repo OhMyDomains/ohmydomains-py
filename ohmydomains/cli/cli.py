@@ -1,18 +1,19 @@
-from pathlib import Path
+import os.path
 import toml
 import click
 from tabulate import tabulate
+import appdirs
+from ohmydomains.util import CONFIG_BASE_PATH, CONFIG_PATH, CACHE_PATH
 from ohmydomains.manager import Manager
 from ohmydomains.domain import Domain
 from ohmydomains.registrars import registrars
 from .registrars import registrar_cli_modifiers
 
 
-CONFIG_PATH = Path.home().joinpath('.config', 'ohmydomains.toml')
-CACHE_PATH = CONFIG_PATH.parent.joinpath('ohmydomains_cache.toml')
-
-
 def load_config():
+	if not CONFIG_BASE_PATH.exists():
+		CONFIG_BASE_PATH.mkdir()
+
 	return toml.loads(CONFIG_PATH.read_text())
 
 
@@ -34,8 +35,8 @@ def load_manager(manager, net_init=True):
 		net_init=net_init,
 		testing=record['testing'],
 		tags=record['tags'],
-		**record['credentials']) for record in data['accounts']))
-	manager.add_domains(*data['raw_domains'])
+		**record['credentials']) for record in data.get('accounts', [])))
+	manager.add_domains(*data.get('raw_domains'))
 
 
 def save_manager(manager):
@@ -66,8 +67,16 @@ DEFAULT_COLUMNS = ('name', 'account', 'creation', 'expiry', 'auto_renew')
 	help='''Comma separated, specify which columns to show.
 	Available: {}.
 	Default is "{}"'''.format(', '.join(Domain.FIELDS), ','.join(DEFAULT_COLUMNS)))
-def list_domains(columns):
-	'''List domain names in tracked accounts and manually tracked ones.'''
+@click.option('-r', '--registrars')
+@click.option('-a', '--accounts')
+@click.option('-e', '--expiring', is_flag=True, help='Equals to -d 30.')
+@click.option('-d', '--due-in', help='List only domain names expiring in this many days.')
+@click.option('-E', '--expiring-after', help='''List only domain names expiring after this many days.''')
+@click.option('-c', '--created-before')
+@click.option('-C', '--created-after')
+@click.argument('criteria', nargs=-1)
+def list_domains(columns, criteria):
+	'''List or search domain names in tracked accounts and manually tracked ones.'''
 
 	if columns:
 		columns = columns.split(',')

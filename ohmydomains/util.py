@@ -1,4 +1,11 @@
+from pathlib import Path
 from requests.exceptions import Timeout as RequestTimeout
+from appdirs import user_config_dir
+
+
+CONFIG_BASE_PATH = Path(user_config_dir('ohmydomains-cli'))
+CONFIG_PATH = CONFIG_BASE_PATH.joinpath('config.toml')
+CACHE_PATH = CONFIG_BASE_PATH.joinpath('cache.toml')
 
 
 class RequestFailed(Exception): pass
