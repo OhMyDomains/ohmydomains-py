@@ -154,9 +154,13 @@ Enter credentials in the form of pairs of KEY:VALUE, which vary by registrar.
 @click.argument('registrar', required=True)
 @click.argument('credentials', nargs=-1)
 @click.option('-t', '--tags', help='Comma separated list of tags. Tag it to more easily recognize later.')
-def track_account(registrar, credentials, tags):
+@click.option('--testing', help='Indicate this is a testing account, making it switch to testing API.')
+def track_account(registrar, credentials, tags, testing):
 	if registrar not in registrars:
-		return click.echo('Registrar {} is not supported yet. Sorry.'.format(registrar))
+		return click.echo('Registrar "{}" is not supported yet. Sorry.'.format(registrar))
+	
+	if testing and registrars[registrar].API_BASE_TESTING == '':
+		return click.echo('Registrar {} does not support testing API.'.format(registrar))
 	
 	account = None
 
