@@ -10,14 +10,13 @@ def track_account(*args, **kwargs):
 		'email': email,
 		'tokenName': 'OhMyDomains CLI'
 	}).json()
-	click.echo('ZEIT will now send to you a confirmation email with the code: ', newline=False)
-	click.echo(init['securityCode'])
+	click.echo('ZEIT will now send to you a confirmation email with the code: ', nl=False)
+	click.echo(click.style(init['securityCode'], fg='cyan'))
 	click.echo('Please confirm it, and press enter.', nl=False)
 	input()
 	verify = requests.get(ZeitAccount.API_BASE + '/now/registration/verify', params={
 		'email': email,
 		'token': init['token']
 	}).json()
-	print(verify)
 	return ZeitAccount(email=email, token=verify['token'])
 
