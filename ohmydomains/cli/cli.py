@@ -1,7 +1,7 @@
 import os.path
 import toml
 import click
-from tabulate import tabulate
+import drawtable
 import appdirs
 from ohmydomains.util import CONFIG_BASE_PATH, CONFIG_PATH, CACHE_PATH
 from ohmydomains.manager import Manager
@@ -60,6 +60,11 @@ def save_manager(manager):
 
 
 manager = Manager()
+
+
+table_drawer = drawtable.Table()
+def draw_table(data, header):
+	table_drawer.draw([header, * data])
 
 
 @click.group()
@@ -129,7 +134,7 @@ def list_domains(columns, registrars, accounts, account_tags, expiring_in_30_day
 		click.echo(len(domains), nl=False)
 	click.echo('\nDone. {} domain name{} in total.'.format(len(domains), len(domains) > 1 and 's' or ''))
 	domains = sorted(domains, key=lambda domain: domain[sort_by], reverse=order == 'desc')
-	click.echo(tabulate([[getattr(output, k)(domain) for k in columns] for domain in domains], headers=columns))
+	draw_table([[getattr(output, k)(domain) for k in columns] for domain in domains], columns)
 
 
 @cli.group()
@@ -145,7 +150,7 @@ def list_accounts(registrars, tags, criteria):
 	load_manager(manager, net_init=False)
 	accounts = manager.get_accounts(registrars=registrars, tags=tags, criteria=criteria)
 	table = ((account.REGISTRAR_NAME, (account.identifier + (account.is_testing_account and '(testing)' or '')), ','.join(account.tags)) for account in accounts)
-	click.echo(tabulate(table, headers=LIST_ACCOUNTS_HEADER))
+	draw_table(table, headers=LIST_ACCOUNTS_HEADER)
 
 
 @accounts.command('track', help='''Track a registrar account.
