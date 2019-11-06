@@ -26,6 +26,12 @@ RegistrarAccount._try_request = _exit_on_failure_try_request
 def load_config():
 	if not CONFIG_BASE_PATH.exists():
 		CONFIG_BASE_PATH.mkdir()
+	
+	if not CONFIG_PATH.exists():
+		return {
+			'accounts': [],
+			'raw_domains': []
+		}
 
 	return toml.loads(CONFIG_PATH.read_text())
 
