@@ -119,5 +119,5 @@ class NameAccount(RegistrarAccount):
 				total_pages = response['lastPage']
 			page_id += 1
 
-			for raw in response['domains']:
+			for raw in response.get('domains', []):
 				yield self._get_domain(raw['domainName'])
